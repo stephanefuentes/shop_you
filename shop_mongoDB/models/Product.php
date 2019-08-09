@@ -2,9 +2,9 @@
 
 
 
-class Product implements MongoDB\BSON\Serializable
+class Product implements MongoDB\BSON\Serializable, MongoDB\BSON\Unserializable
 {
-    private $id;
+    private $_id;
     private $name;
     private $description;
     private $price;
@@ -14,37 +14,48 @@ class Product implements MongoDB\BSON\Serializable
 
     public function bsonSerialize()
     {
+        
         return [
             //'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
-            'price' => $this->price,
-            'quantity' => $this->quantity,
-            'picture_url' => $this->picture_url
+            'price' => (float) $this->price,
+            'quantity' => (int) $this->quantity,
+            'picture_url' => $this->picture_url,
+            
             
         ];
+
+        
     }
+
+
+    public function bsonUnserialize(array $data)
+    {
+        foreach( $data as $key => $value)
+        {
+            $this->$key = $value;
+        }
+
+        //$this->unserialized = true;
+
+        //https://www.php.net/manual/fr/mongodb.persistence.deserialization.php#mongodb.persistence.typemaps
+
+        //https://www.php.net/manual/fr/class.mongodb-bson-unserializable.php
+    }
+
+
+
     
     /**
      * Get the value of id
      */
     public function getId()
     {
-        return $this->id;
+        return $this->_id;
     }
 
-    /**
-     * Set the value of id
-     *
-     * @return  self
-     */
-    public function setId($id)
-    {
-        $this->id = $id;
-
-        return $this;
-    }
-
+    
     /**
      * Get the value of name
      */
@@ -163,42 +174,69 @@ class Product implements MongoDB\BSON\Serializable
 
     // méthode pour la récupération d'un seul produit
 
-    // public static function getProductById($id)
-    // {
-    //     $cnx = new Connexion();
-        
-    //     $product = $cnx->getOne("SELECT * FROM product WHERE id=?", [$id], 'Product');
+    public static function getProductById($id)
+    {
+        $cnx = new Connexion();
 
-    //     return $product;
-    // }
+        //$product = $cnx->getOne("SELECT * FROM product WHERE id=?", [$id], 'Product');
 
-    // // méthode pour la récupération de la liste de tous les produits
+        // retourne une objet de type "document bson"
+        $productBson = $cnx->findOne(['_id' => new MongoDB\BSON\ObjectId($id)], "product");
 
-    // public static function getAllProducts()
-    // {
-    //     $cnx = new Connexion();
-    //     $products = $cnx->getMany("SELECT * FROM product", "Product");
+        // converti l'objet de type "document bson" en string
+        $product_string = MongoDB\BSON\fromPHP($productBson);
 
-    //     return $products;
-    // }
+        // converti l'objet bson serialiser en object  ( ici "Product")
+        $product = MongoDB\BSON\toPHP($product_string, ['root' => "Product"]);
 
-    // public function update()
-    // {
-    //     $cnx = new Connexion();
-    //     $cnx->querySQL(
-    //         "UPDATE  product SET name= ?, description=?, price=?, quantity=?, picture_url=? WHERE id=?",
-    //         [
-    //             $this->name,
-    //             $this->description,
-    //             $this->price,
-    //             $this->quantity,
-    //             $this->picture_url,
-    //             $this->id
-    //         ]
-    //         );
+        //dd($product);
+
+       return $product;
+    }
+
+
+    // méthode pour la récupération de la liste de tous les produits
+    public static function getAllProducts()
+    {
+        $cnx = new Connexion();
+       // $products = $cnx->getMany("SELECT * FROM product", "Product");
+
+       // $productsBson représente un tableau d'objet de type "document bson"
+       $productsBson = $cnx->find("product");
+
+       foreach($productsBson as $productBson)
+       {
+            // converti l'objet de type "document bson" en string
+            $product_string = MongoDB\BSON\fromPHP($productBson);
+
+            // converti l'objet bson serialiser en object  ( ici "Product")
+            $product = MongoDB\BSON\toPHP($product_string, ['root' => "Product"]);
+
+            $products[] = $product;
+       }
+
+        return $products;
+    }
+
+
+
+    public function update()
+    {
+        $cnx = new Connexion();
+        $cnx->querySQL(
+            "UPDATE  product SET name= ?, description=?, price=?, quantity=?, picture_url=? WHERE id=?",
+            [
+                $this->name,
+                $this->description,
+                $this->price,
+                $this->quantity,
+                $this->picture_url,
+                $this->id
+            ]
+            );
             
        
-    // }
+    }
 
 
 

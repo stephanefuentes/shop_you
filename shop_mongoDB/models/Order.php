@@ -1,17 +1,48 @@
 <?php
 
 
-class Order
+class Order implements MongoDB\BSON\Serializable, MongoDB\BSON\Unserializable
 {
     // proprietés
-    private $id;
+    private $_id;
     private $created_at;
     private $submitted_at;
     private $total_ht;
     private $total_ttc;
     private $user_id;
+    private $order_detail;
 
 
+    public function bsonSerialize()
+    {
+
+        return [
+            //'id' => $this->id,
+            'created_at' => new \MongoDB\BSON\UTCDateTime(new DateTime()),
+            'submitted_at' => new \MongoDB\BSON\UTCDateTime(new DateTime()),
+            'total_ht' => (float) $this->total_ht,
+            'total_ttc' => (float) $this->total_ttc,
+            'user_id' => $this->user_id,
+            'order_detail' => $this->order_detail
+
+
+        ];
+    }
+
+
+    // va récuperer automatiquement les doonnées de l'attribut storage ( qui est un tableau) dans l'objet de type document bson
+    public function bsonUnserialize(array $data)
+    {
+        foreach ($data as $key => $value) {
+            $this->$key = $value;
+        }
+
+        //$this->unserialized = true;
+
+        //https://www.php.net/manual/fr/mongodb.persistence.deserialization.php#mongodb.persistence.typemaps
+
+        //https://www.php.net/manual/fr/class.mongodb-bson-unserializable.php
+    }
 
 
     // getter et setter
@@ -21,7 +52,7 @@ class Order
      */
     public function getId()
     {
-        return $this->id;
+        return $this->_id;
     }
 
     /**
@@ -127,26 +158,52 @@ class Order
     }
 
 
+    /**
+     * Get the value of order_detail
+     */
+    public function getorder_detail()
+    {
+        return $this->order_detail;
+    }
+
+    /**
+     * Set the value of order_detail
+     *
+     * @return  self
+     */
+    public function setorder_detail($order_detail)
+    {
+        $this->order_detail = $order_detail;
+
+        return $this;
+    }
+
+
 
 
     // méthode d'insertion dans la base de données
     public function save()
     {
         $cnx = new Connexion();
-        $id =  $cnx->querySQL(
-            "INSERT INTO `order` (created_at, total_ht, total_ttc, user_id) VALUES (?,?,?,?)",
-            [
-                date('Y-m-d H:i:s'),
-                $this->total_ht,
-                $this->total_ttc,
-                $this->user_id
-            ]
-        );
+        // $id =  $cnx->querySQL(
+        //     "INSERT INTO `order` (created_at, total_ht, total_ttc, user_id) VALUES (?,?,?,?)",
+        //     [
+        //         date('Y-m-d H:i:s'),
+        //         $this->total_ht,
+        //         $this->total_ttc,
+        //         $this->user_id
+        //     ]
+        // );
 
+        // return $id;
+
+
+        $id = $cnx->addToDb("order", $this);
         return $id;
     }
 
 
+    
     public static function editSubmittedAt($id)
     {
         $cnx = new Connexion();
@@ -159,7 +216,7 @@ class Order
         );
     }
 
-    // méthode de récupération d'une seule commande AVEC ses orderDetails 
+    // méthode de récupération d'une seule commande AVEC ses order_details 
 
     public static function getOrderById($id)
     {
@@ -194,4 +251,6 @@ class Order
 
 
    
+
+  
 }

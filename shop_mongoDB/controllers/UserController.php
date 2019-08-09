@@ -50,7 +50,7 @@ class UserController extends Controller
             $user->setLast_name($_POST["last_name"]);
             $user->setEmail($_POST["email"]);
             $user->setPassword($_POST['password']);
-            $user->setAdmin(0);
+            $user->setAdmin(false);
             if ($user->isValid()) {
                 $user->save();
                 $this->redirectTo("/user");
@@ -116,7 +116,9 @@ class UserController extends Controller
         $order->setTotal_ttc($total * 1.2);
         $session = new Session();
         $order->setUser_id($session->getLoggedUserId());
-        $order_id = $order->save();
+        //$order_id = $order->save();
+
+        $arrayOrderDetail = [];
         foreach($orders_in_cookie as $o)
         {
             $details = explode(",", $o);
@@ -125,7 +127,7 @@ class UserController extends Controller
             $product = Product::getProductById($details[0]);
             $order_details->setPrice_each($product->getPrice());
             $order_details->setTotal_price($product->getPrice()*$details[3]);
-            $order_details->setOrder_id($order_id);
+            //$order_details->setOrder_id($order_id);
             $order_details->setProduct_id($product->getId());
             $order_details->save();
 
@@ -134,6 +136,7 @@ class UserController extends Controller
 
         }
 
+        $order_id = $order->save();
         unset($_COOKIE['cart']);
         setcookie('cart', null, -1, '/'); 
 

@@ -1,19 +1,49 @@
 <?php
 
 
-class OrderDetails
+class OrderDetails implements MongoDB\BSON\Serializable, MongoDB\BSON\Unserializable
 {
     // proprietés
-    private $id;
+    private $_id;
     private $quantity_ordered;
     private $price_each;
     private $total_price;
-    private $order_id;
+    //private $order_id;
     private $product_id;
 
-    
 
-    // getter et setter
+
+    public function bsonSerialize()
+    {
+
+        return [
+            //'id' => $this->id,
+            '_id' => new MongoDB\BSON\ObjectId(),
+            'quantity_ordered' => (int) $this->quantity_ordered,
+            'price_each' => (float) $this->price_each,
+            'total_price' => (float) $this->total_price,
+            //'order_id' => $this->order_id,
+            'product_id' => $this->product_id
+
+
+        ];
+    }
+
+
+    // va récuperer automatiquement les doonnées de l'attribut storage ( qui est un tableau) dans l'objet de type document bson
+    public function bsonUnserialize(array $data)
+    {
+        foreach ($data as $key => $value) {
+            $this->$key = $value;
+        }
+
+        //$this->unserialized = true;
+
+        //https://www.php.net/manual/fr/mongodb.persistence.deserialization.php#mongodb.persistence.typemaps
+
+        //https://www.php.net/manual/fr/class.mongodb-bson-unserializable.php
+    }
+
 
 
     /**
@@ -21,7 +51,7 @@ class OrderDetails
      */ 
     public function getId()
     {
-        return $this->id;
+        return $this->_id;
     }
 
     /**
@@ -84,25 +114,7 @@ class OrderDetails
         return $this;
     }
 
-    /**
-     * Get the value of order_id
-     */ 
-    public function getOrder_id()
-    {
-        return $this->order_id;
-    }
-
-    /**
-     * Set the value of order_id
-     *
-     * @return  self
-     */ 
-    public function setOrder_id($order_id)
-    {
-        $this->order_id = $order_id;
-
-        return $this;
-    }
+   
 
     /**
      * Get the value of product_id
