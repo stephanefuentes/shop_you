@@ -45,4 +45,35 @@ class Connexion
         //dump($result->toArray());die();
         return $result;
     }
+
+    public function findMany($collection, $query =[])
+    {
+        if($query)
+        // renvoie un tableau d'objet de type "document bson"
+        $result = $this->db->$collection->find($query);
+        else {
+            $result = $this->db->$collection->find();
+        }
+        //dump($result->toArray());die();
+        return $result->toArray();
+    }
+
+
+    public function update($collection,array $query,array $edited_data)
+    {
+        $this->db->$collection->updateOne(
+            $query,
+            ['$set' => $edited_data]
+        );
+    }
+
+
+
+    public function replace($collection, $query, $data_to_replace)
+    {
+        $this->db->$collection->replaceOne(
+            $query,
+            $data_to_replace
+        );
+    }
 }

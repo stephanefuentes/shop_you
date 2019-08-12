@@ -187,6 +187,7 @@ class Product implements MongoDB\BSON\Serializable, MongoDB\BSON\Unserializable
         $product_string = MongoDB\BSON\fromPHP($productBson);
 
         // converti l'objet bson serialiser en object  ( ici "Product")
+         // la fonction  bsonUnserialize est appellé a ce moment là
         $product = MongoDB\BSON\toPHP($product_string, ['root' => "Product"]);
 
         //dd($product);
@@ -210,6 +211,7 @@ class Product implements MongoDB\BSON\Serializable, MongoDB\BSON\Unserializable
             $product_string = MongoDB\BSON\fromPHP($productBson);
 
             // converti l'objet bson serialiser en object  ( ici "Product")
+             // la fonction  bsonUnserialize est appellé a ce moment là
             $product = MongoDB\BSON\toPHP($product_string, ['root' => "Product"]);
 
             $products[] = $product;
@@ -223,19 +225,37 @@ class Product implements MongoDB\BSON\Serializable, MongoDB\BSON\Unserializable
     public function update()
     {
         $cnx = new Connexion();
-        $cnx->querySQL(
-            "UPDATE  product SET name= ?, description=?, price=?, quantity=?, picture_url=? WHERE id=?",
+        // $cnx->querySQL(
+        //     "UPDATE  product SET name= ?, description=?, price=?, quantity=?, picture_url=? WHERE id=?",
+        //     [
+        //         $this->name,
+        //         $this->description,
+        //         $this->price,
+        //         $this->quantity,
+        //         $this->picture_url,
+        //         $this->id
+        //     ]
+        //     );
+
+        $cnx->update(
+            'product',
+            ['_id' => $this->_id],
             [
-                $this->name,
-                $this->description,
-                $this->price,
-                $this->quantity,
-                $this->picture_url,
-                $this->id
+                'quantity' => $this->quantity
             ]
-            );
-            
+        );
        
+    }
+
+
+    public function updateProduct()
+    {
+        $cnx = new Connexion();
+        $cnx->replace(
+            'product',
+            ['_id' => $this->_id],
+            $this
+        );
     }
 
 

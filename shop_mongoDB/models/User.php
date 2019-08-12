@@ -2,15 +2,15 @@
 
 
 
-class User implements MongoDB\BSON\Serializable
+class User implements MongoDB\BSON\Serializable, MongoDB\BSON\Unserializable
 {
     // proprietés
     
-    private $id;
+    private $_id;
     private $first_name;
     private $last_name;
     private $email;
-    private $created_at;
+   // private $created_at;
     private $password;
     private $admin;
 
@@ -23,13 +23,25 @@ class User implements MongoDB\BSON\Serializable
             'first_name' => $this->first_name,
             'last_name' => $this->last_name,
             'email' => $this->email,
-            'created_at' => new \MongoDB\BSON\UTCDateTime(new DateTime()),
+            //'created_at' => new \MongoDB\BSON\UTCDateTime(new DateTime()),
             'password' => password_hash($this->password, PASSWORD_BCRYPT),
             'admin' => $this->admin
 
         ];
     }
 
+    public function bsonUnserialize(array $data)
+    {
+        foreach ($data as $key => $value) {
+            $this->$key = $value;
+        }
+
+        //$this->unserialized = true;
+
+        //https://www.php.net/manual/fr/mongodb.persistence.deserialization.php#mongodb.persistence.typemaps
+
+        //https://www.php.net/manual/fr/class.mongodb-bson-unserializable.php
+    }
 
 
     /**
@@ -37,7 +49,7 @@ class User implements MongoDB\BSON\Serializable
      */ 
     public function getId()
     {
-        return $this->id;
+        return $this->_id;
     }
 
     /**
@@ -105,31 +117,16 @@ class User implements MongoDB\BSON\Serializable
      */ 
     public function getCreated_at()
     {
-        return $this->created_at;
+        $user_id = $this->_id;
+        $timestamp = $user_id->getTimestamp();
+        $date = (new DateTime())->setTimestamp($timestamp);
+        return $date->format("d/m/Y H:i:s");
     }
 
-    /**
-     * Set the value of created_at
-     *
-     * @return  self
-     */ 
-    public function setCreated_at($created_at)
-    {
-        $this->created_at = $created_at;
-
-        return $this;
-    }
+    
 
 
 
-    // méthode d'insertion dans la base de données
-
-
-    // méthode de récupération de tous les utilisateurs
-
-
-
-    // méthode de récupération d'un seul utilisateur
 
     /**
      * Get the value of password
@@ -197,24 +194,43 @@ class User implements MongoDB\BSON\Serializable
 
 
 
-    // public static function getUserByEmail($email)
-    // {
-    //     $cnx = new Connexion();
+    public static function getUserByEmail($email)
+    {
+        $cnx = new Connexion();
 
-    //     $user = $cnx->getOne("SELECT * FROM user WHERE email = ?", [$email], "User");
+        //$user = $cnx->getOne("SELECT * FROM user WHERE email = ?", [$email], "User");
+        $userBson = $cnx->findOne(["email" => $email], "user");       
 
-    //     return $user;
-    // }
+        // converti l'objet de type "document bson" en string
+        $user_string = MongoDB\BSON\fromPHP($userBson);
+
+        // converti l'objet bson serialiser en object  ( ici "Product")
+        // la fonction  bsonUnserialize est appellé a ce moment là
+        $user = MongoDB\BSON\toPHP($user_string, ['root' => "User"]);
 
 
-    // public static function getUserById($id)
-    // {
+        return $user;
+    }
+
+
+    public static function getUserById($id)
+    {
 
        
-    //     $cnx = new Connexion();
+        $cnx = new Connexion();
 
-    //     $user = $cnx->getOne("SELECT * FROM user WHERE id = ?", [$id], "User");
+        // $user = $cnx->getOne("SELECT * FROM user WHERE id = ?", [$id], "User");
 
-    //     return $user;
-    // }
+
+        //$user = $cnx->getOne("SELECT * FROM user WHERE email = ?", [$email], "User");
+        $userBson = $cnx->findOne(["_id" => new MongoDB\BSON\ObjectId($id)], "user");
+
+        // converti l'objet de type "document bson" en string
+        $user_string = MongoDB\BSON\fromPHP($userBson);
+
+        // converti l'objet bson serialiser en object  ( ici "Product")
+        $user = MongoDB\BSON\toPHP($user_string, ['root' => "User"]);
+
+        return $user;
+    }
 }

@@ -115,7 +115,9 @@ class UserController extends Controller
         $order->setTotal_ht($total);
         $order->setTotal_ttc($total * 1.2);
         $session = new Session();
+        
         $order->setUser_id($session->getLoggedUserId());
+        
         //$order_id = $order->save();
 
         $arrayOrderDetail = [];
@@ -129,12 +131,17 @@ class UserController extends Controller
             $order_details->setTotal_price($product->getPrice()*$details[3]);
             //$order_details->setOrder_id($order_id);
             $order_details->setProduct_id($product->getId());
-            $order_details->save();
+
+            $arrayOrderDetail[] = $order_details;
+
+            //$order_details->save();
 
             $product->setQuantity($product->getQuantity() - $details[3]);
             $product->update();
 
         }
+
+        $order->setorder_detail($arrayOrderDetail);
 
         $order_id = $order->save();
         unset($_COOKIE['cart']);

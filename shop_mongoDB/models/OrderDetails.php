@@ -18,6 +18,8 @@ class OrderDetails implements MongoDB\BSON\Serializable, MongoDB\BSON\Unserializ
 
         return [
             //'id' => $this->id,
+
+            // ne sera paqs généré automatiquement car cil ne sra pas référencé comme une collection dans notre base mongo en fait, 
             '_id' => new MongoDB\BSON\ObjectId(),
             'quantity_ordered' => (int) $this->quantity_ordered,
             'price_each' => (float) $this->price_each,
@@ -45,6 +47,18 @@ class OrderDetails implements MongoDB\BSON\Serializable, MongoDB\BSON\Unserializ
     }
 
 
+
+    /**
+     * Set the value of _id
+     *
+     * @return  self
+     */
+    public function set_id($_id)
+    {
+        $this->_id = $_id;
+
+        return $this;
+    }
 
     /**
      * Get the value of id
@@ -144,16 +158,20 @@ class OrderDetails implements MongoDB\BSON\Serializable, MongoDB\BSON\Unserializ
     public function save()
     {
         $cnx = new Connexion();
-        $cnx->querySQL(
-            "INSERT INTO order_details (quantity_ordered, price_each, total_price, order_id, product_id) VALUES (?,?,?,?,?)",
-            [
-                $this->quantity_ordered,
-                $this->price_each,
-                $this->total_price,
-                $this->order_id,
-                $this->product_id
-            ]
-            );
+        // $cnx->querySQL(
+        //     "INSERT INTO order_details (quantity_ordered, price_each, total_price, order_id, product_id) VALUES (?,?,?,?,?)",
+        //     [
+        //         $this->quantity_ordered,
+        //         $this->price_each,
+        //         $this->total_price,
+        //         $this->order_id,
+        //         $this->product_id
+        //     ]
+        //     );
+
+
+        $cnx->addToDb("order_detail", $this);
+
     }
 
     public static function getOrderDetailsByOrder($id)
@@ -166,4 +184,6 @@ class OrderDetails implements MongoDB\BSON\Serializable, MongoDB\BSON\Unserializ
                 ); 
         return $result;
     }
+
+    
 }
