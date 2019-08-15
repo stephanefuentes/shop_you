@@ -13,7 +13,7 @@ function cart_management() {
             for (var i = 0; i < children.length; i++) {
                 if (children[i].className == "product_name") {
                     // // récupérer product name
-                    var name = children[i].textContent;
+                    var name = children[i].innerText;
                 }
                 if (children[i].className == "product_price") {
                     // // récupérer le prix
@@ -30,7 +30,7 @@ function cart_management() {
                 url: "index.php/product/cart_ajax",
                 type: "POST",
                 data: { product_id: id, product_name: name, product_price: price, product_quantity: quantity },
-                dataType: "html"
+                dataType: "json"
             }).done(function (result) {
                 console.log(result);
             })
